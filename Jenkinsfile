@@ -53,8 +53,9 @@ pipeline {
                     // during 'docker compose build', we just push them directly.
                     sh '''
                         aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
-                        docker push $ECR_REGISTRY/${ECR_REPO_BACKEND}:backend-${IMAGE_TAG}
                         docker push $ECR_REGISTRY/${ECR_REPO}:frontend-${IMAGE_TAG}
+                        docker push $ECR_REGISTRY/${ECR_REPO_BACKEND}:backend-${IMAGE_TAG}
+                        
                     '''
                 }
             }
