@@ -1,7 +1,7 @@
 services:
   frontend:
     build: ./frontend
-    image: ${ECR_REGISTRY}/${ECR_REPO}:frontend-${IMAGE_TAG}
+    image: ${ECR_REGISTRY}/${ECR_REPO_BACKEND}:frontend-${IMAGE_TAG}
     ports:
       - "80:80"
     networks:
