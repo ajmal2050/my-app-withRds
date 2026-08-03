@@ -2,20 +2,20 @@ pipeline {
     agent any
 
     environment {
-        // Securely pull infrastructure secrets from Jenkins Credentials Store
-        // Using 'credentials()' automatically masks these values in build logs!
-        AWS_REGION     = credentials('aws-region-secret')
-        TARGET_GROUP_ARN = credentials('aws-target-group-arn')   // ARN of your ALB target group
-        ECR_REGISTRY   = credentials('aws-ecr-registry-url')
-        ECR_REPO       = credentials('aws-ecr-repo-name')
-        ECR_REPO_BACKEND = credentials('aws-ecr-repo-name-backend')
-        EC2_PRIVATE_IP = credentials('ec2-private-ip-secret')
-        EC2_USER       = credentials('ec2-ssh-username')
+        // AWS & ECR Variables
+        AWS_REGION         = credentials('aws-region-secret')
+        ECR_REGISTRY       = credentials('aws-ecr-registry-url')
+        
+        // Repositories (Reverted frontend to ECR_REPO as requested)
+        ECR_REPO           = credentials('aws-ecr-repo-name')
+        ECR_REPO_BACKEND   = credentials('aws-ecr-repo-name-backend')
+        
+        // ECS Fargate Variables
+        ECS_CLUSTER        = 'staff-app-cluster'
+        ECS_SERVICE        = 'staff-app-service'
         
         // Dynamic build tag
-        IMAGE_TAG      = "${env.BUILD_NUMBER}"
-        CONTAINER_NAME = 'my-running-app'
-        PORT_MAPPING   = '80:8080'
+        IMAGE_TAG          = "${env.BUILD_NUMBER}"
     }
 
     stages {
@@ -26,71 +26,62 @@ pipeline {
             }
         }
 
-        stage('2. Build Docker Images') {
+        stage('2. Build & Push to ECR') {
             steps {
-                echo 'Building Docker images using Docker Compose...'
-                script {
-                    // FIXED: Using docker compose to read your backend/frontend folders automatically!
-                    // And using triple single-quotes (''') for security
-                    sh '''
-                        docker compose build
-
-                    '''
-                }
-            }
-        }
-
-        stage('3. Push to AWS ECR') {
-            steps {
-                echo 'Authenticating and pushing image to AWS ECR...'
-                // Scoped AWS credential binding for ECR push
+                echo 'Building and pushing directly to AWS ECR...'
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws-ecr-credentials',
                     accessKeyVariable: 'AWS_ACCESS_KEY_ID',
                     secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
                 ]]) {
-                   // Because docker-compose.yml now applies the exact remote tags natively 
-                    // during 'docker compose build', we just push them directly.
                     sh '''
+                        # 1. Login to AWS ECR
                         aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
-                        docker push $ECR_REGISTRY/${ECR_REPO}:frontend-${IMAGE_TAG}
-                        docker push $ECR_REGISTRY/${ECR_REPO_BACKEND}:backend-${IMAGE_TAG}
                         
+                        # 2. Build and Tag Frontend (using ECR_REPO), then Push
+                        docker build -t $ECR_REGISTRY/${ECR_REPO}:frontend-${IMAGE_TAG} ./frontend
+                        docker push $ECR_REGISTRY/${ECR_REPO}:frontend-${IMAGE_TAG}
+                        
+                        # 3. Build and Tag Backend, then Push
+                        docker build -t $ECR_REGISTRY/${ECR_REPO_BACKEND}:backend-${IMAGE_TAG} ./backend
+                        docker push $ECR_REGISTRY/${ECR_REPO_BACKEND}:backend-${IMAGE_TAG}
                     '''
                 }
             }
         }
 
-       stage('4. Register with Load Balancer') {
-    steps {
-        echo "Registering EC2 instance with Load Balancer..."
-        sshagent(['ec2-private-ssh-key']) {
-            // Using triple double-quotes (""") allows Groovy to inject Jenkins env variables 
-            // like ${EC2_USER} while we escape bash variables (\$) to run remotely.
-            sh """
-                ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_PRIVATE_IP} '
-                    # 1. Fetch IMDSv2 token
-                    TOKEN=\$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" -s)
-                    
-                    # 2. Fetch Instance ID using the token
-                    INSTANCE_ID=\$(curl -H "X-aws-ec2-metadata-token: \$TOKEN" -s http://169.254.169.254/latest/meta-data/instance-id)
-                    
-                    # 3. Register with ALB
-                    aws elbv2 register-targets \\
-                        --target-group-arn ${TARGET_GROUP_ARN} \\
-                        --targets Id=\$INSTANCE_ID
-                '
-            """
+        stage('3. Deploy to ECS Fargate') {
+            steps {
+                echo 'Deploying new containers to AWS ECS Fargate...'
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-ecr-credentials',
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                ]]) {
+                    sh '''
+                        # 1. Inject the new Image URLs into your ECS Task Definition Template
+                        sed -e "s|<FRONTEND_IMAGE>|$ECR_REGISTRY/${ECR_REPO}:frontend-${IMAGE_TAG}|g" \
+                            -e "s|<BACKEND_IMAGE>|$ECR_REGISTRY/${ECR_REPO_BACKEND}:backend-${IMAGE_TAG}|g" \
+                            ecs-task-def-template.json > ecs-task-def.json
+                            
+                        # 2. Register the new Task Definition in AWS
+                        REVISION=$(aws ecs register-task-definition --cli-input-json file://ecs-task-def.json --query 'taskDefinition.taskDefinitionArn' --output text)
+                        
+                        echo "Registered new ECS Task Definition: $REVISION"
+                        
+                        # 3. Update the ECS Service (AWS automatically attaches the new containers to your Load Balancer)
+                        aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --task-definition $REVISION --force-new-deployment
+                    '''
+                }
+            }
         }
-    }
-}
-     
     }
 
     post {
         success {
-            echo '✅ Pipeline succeeded! Application deployed securely.'
+            echo '✅ Pipeline succeeded! Fargate containers are spinning up and attaching to the ALB.'
         }
         failure {
             echo '❌ Pipeline failed. Please check the build logs above.'
