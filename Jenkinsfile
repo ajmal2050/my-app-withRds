@@ -34,6 +34,14 @@ pipeline {
                     // And using triple single-quotes (''') for security.
                     sh '''
                         docker compose build
+                         echo "===== Docker Images ====="
+            docker image ls
+
+            echo "===== Inspect Frontend ====="
+            docker image inspect ${ECR_REGISTRY}/${ECR_REPO}:frontend-${IMAGE_TAG}
+
+            echo "===== Inspect Backend ====="
+            docker image inspect ${ECR_REGISTRY}/${ECR_REPO_BACKEND}:backend-${IMAGE_TAG}
                     '''
                 }
             }
