@@ -62,39 +62,7 @@ pipeline {
             }
         }
 
-       // stage('4. Deploy to Private EC2') {
-            steps {
-                echo 'Deploying to private EC2 instance...'
-                // Scoped SSH agent binding for private key authentication
-                sshagent(['ec2-private-ssh-key']) {
-                 // 1. Copy the docker-compose file to the EC2 instance
-                    sh """
-                        scp -o StrictHostKeyChecking=no docker-compose.yml ${EC2_USER}@${EC2_PRIVATE_IP}:/home/${EC2_USER}/docker-compose.yml
-                        scp -r -o StrictHostKeyChecking=no postgres ${EC2_USER}@${EC2_PRIVATE_IP}:/home/${EC2_USER}/postgres
-                    """
-                    
-                    // 2. SSH in, pass environment variables, and run docker compose
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_PRIVATE_IP} '
-                            aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY} &&
-                            
-                            # Export variables so remote docker compose can read them
-                            export ECR_REGISTRY=${ECR_REGISTRY}
-                            export ECR_REPO=${ECR_REPO}
-                            export IMAGE_TAG=${IMAGE_TAG}
-                            
-                            # Pull latest images and restart the stack correctly
-                            cd /home/${EC2_USER} &&
-                            docker-compose pull &&
-                            docker-compose up -d &&
-                            docker image prune -f
-                        '
-                    """
-                }
-            }
-        }
-
-       stage('5. Register with Load Balancer') {
+       stage('4. Register with Load Balancer') {
     steps {
         echo "Registering EC2 instance with Load Balancer..."
         sshagent(['ec2-private-ssh-key']) {
