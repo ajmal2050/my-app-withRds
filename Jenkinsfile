@@ -34,6 +34,17 @@ pipeline {
                     // And using triple single-quotes (''') for security.
                     sh '''
                         docker compose build
+                    
+echo "Registry length: ${#ECR_REGISTRY}"
+echo "Frontend repo length: ${#ECR_REPO}"
+echo "Backend repo length: ${#ECR_REPO_BACKEND}"
+
+printf "[%s]\n" "$ECR_REGISTRY"
+printf "[%s]\n" "$ECR_REPO"
+printf "[%s]\n" "$ECR_REPO_BACKEND
+
+
+                        
                          echo "===== Docker Images ====="
             docker image ls
 
