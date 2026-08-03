@@ -35,22 +35,6 @@ pipeline {
                     sh '''
                         docker compose build
 
-                         echo "===== Docker Images ===="
-                          echo "===== Environment ====="
-                echo "$ECR_REGISTRY"
-                echo "$ECR_REPO"
-                echo "$ECR_REPO_BACKEND"
-                echo "$IMAGE_TAG"
-
-                echo "===== Docker Images ====="
-                docker image ls
-
-                echo "===== Frontend ====="
-                docker image inspect "$ECR_REGISTRY/$ECR_REPO:frontend-$IMAGE_TAG" || true
-
-                echo "===== Backend ====="
-                docker image inspect "$ECR_REGISTRY/$ECR_REPO_BACKEND:backend-$IMAGE_TAG" || true
-           
                     '''
                 }
             }
