@@ -31,31 +31,26 @@ pipeline {
                 echo 'Building Docker images using Docker Compose...'
                 script {
                     // FIXED: Using docker compose to read your backend/frontend folders automatically!
-                    // And using triple single-quotes (''') for security.
-                     sh '''
-echo "Registry length: ${#ECR_REGISTRY}"
-echo "Frontend repo length: ${#ECR_REPO}"
-echo "Backend repo length: ${#ECR_REPO_BACKEND}"
-
-printf "[%s]\n" "$ECR_REGISTRY"
-printf "[%s]\n" "$ECR_REPO"
-printf "[%s]\n" "$ECR_REPO_BACKEND"
-'''
-
-
-
-                    
+                    // And using triple single-quotes (''') for security
                     sh '''
                         docker compose build
 
-                         echo "===== Docker Images ====="
-            docker image ls
+                         echo "===== Docker Images ===="
+                          echo "===== Environment ====="
+                echo "$ECR_REGISTRY"
+                echo "$ECR_REPO"
+                echo "$ECR_REPO_BACKEND"
+                echo "$IMAGE_TAG"
 
-            echo "===== Inspect Frontend ====="
-            docker image inspect ${ECR_REGISTRY}/${ECR_REPO}:frontend-${IMAGE_TAG}
+                echo "===== Docker Images ====="
+                docker image ls
 
-            echo "===== Inspect Backend ====="
-            docker image inspect ${ECR_REGISTRY}/${ECR_REPO_BACKEND}:backend-${IMAGE_TAG}
+                echo "===== Frontend ====="
+                docker image inspect "$ECR_REGISTRY/$ECR_REPO:frontend-$IMAGE_TAG" || true
+
+                echo "===== Backend ====="
+                docker image inspect "$ECR_REGISTRY/$ECR_REPO_BACKEND:backend-$IMAGE_TAG" || true
+           
                     '''
                 }
             }
