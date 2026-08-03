@@ -32,19 +32,22 @@ pipeline {
                 script {
                     // FIXED: Using docker compose to read your backend/frontend folders automatically!
                     // And using triple single-quotes (''') for security.
-                    sh '''
-                        docker compose build
-                    
+                     sh '''
 echo "Registry length: ${#ECR_REGISTRY}"
 echo "Frontend repo length: ${#ECR_REPO}"
 echo "Backend repo length: ${#ECR_REPO_BACKEND}"
 
 printf "[%s]\n" "$ECR_REGISTRY"
 printf "[%s]\n" "$ECR_REPO"
-printf "[%s]\n" "$ECR_REPO_BACKEND
+printf "[%s]\n" "$ECR_REPO_BACKEND"
+'''
 
 
-                        
+
+                    
+                    sh '''
+                        docker compose build
+
                          echo "===== Docker Images ====="
             docker image ls
 
