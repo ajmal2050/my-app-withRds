@@ -62,7 +62,7 @@ pipeline {
             }
         }
 
-        stage('4. Deploy to Private EC2') {
+       // stage('4. Deploy to Private EC2') {
             steps {
                 echo 'Deploying to private EC2 instance...'
                 // Scoped SSH agent binding for private key authentication
