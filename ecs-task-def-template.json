@@ -1,88 +1,39 @@
 {
-    "taskDefinitionArn": "arn:aws:ecs:ap-south-1:835756672944:task-definition/default-frontend-cluster:2",
-    "containerDefinitions": [
+  "family": "staff-app-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "1024",
+  "memory": "2048",
+  "executionRoleArn": "arn:aws:iam::835756672944:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "Main",
+      "image": "<FRONTEND_IMAGE>",
+      "cpu": 0,
+      "portMappings": [
         {
-            "name": "Main",
-            "image": "835756672944.dkr.ecr.ap-south-1.amazonaws.com/staff/staff-app-ssm@sha256:e84d5be6ba62cc8340039bac46b7440b829af4422e1dff41494bf880ffb614fa",
-            "cpu": 1024,
-            "memoryReservation": 2048,
-            "portMappings": [
-                {
-                    "containerPort": 5000,
-                    "hostPort": 5000,
-                    "protocol": "tcp",
-                    "name": "main-80-tcp"
-                }
-            ],
-            "essential": true,
-            "environment": [],
-            "mountPoints": [],
-            "volumesFrom": [],
-            "logConfiguration": {
-                "logDriver": "awslogs",
-                "options": {
-                    "awslogs-group": "/aws/ecs/default/frontend-cluster-29a8",
-                    "awslogs-region": "ap-south-1",
-                    "awslogs-stream-prefix": "ecs"
-                },
-                "secretOptions": []
-            },
-            "systemControls": []
+          "containerPort": 5000,
+          "hostPort": 5000,
+          "protocol": "tcp",
+          "name": "main-80-tcp"
         }
-    ],
-    "family": "default-frontend-cluster",
-    "taskRoleArn": "arn:aws:iam::835756672944:role/ecsTaskExecutionRole",
-    "executionRoleArn": "arn:aws:iam::835756672944:role/ecsTaskExecutionRole",
-    "networkMode": "awsvpc",
-    "revision": 2,
-    "volumes": [],
-    "status": "ACTIVE",
-    "requiresAttributes": [
-        {
-            "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+      ],
+      "essential": true,
+      "environment": [],
+      "mountPoints": [],
+      "volumesFrom": [],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/aws/ecs/default/frontend-cluster-29a8",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "ecs"
         },
-        {
-            "name": "ecs.capability.execution-role-awslogs"
-        },
-        {
-            "name": "com.amazonaws.ecs.capability.ecr-auth"
-        },
-        {
-            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
-        },
-        {
-            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.21"
-        },
-        {
-            "name": "com.amazonaws.ecs.capability.task-iam-role"
-        },
-        {
-            "name": "ecs.capability.execution-role-ecr-pull"
-        },
-        {
-            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
-        },
-        {
-            "name": "ecs.capability.task-eni"
-        }
-    ],
-    "placementConstraints": [],
-    "compatibilities": [
-        "EC2",
-        "MANAGED_INSTANCES",
-        "FARGATE"
-    ],
-    "runtimePlatform": {
-        "cpuArchitecture": "X86_64",
-        "operatingSystemFamily": "LINUX"
-    },
-    "requiresCompatibilities": [
-        "FARGATE"
-    ],
-    "cpu": "1024",
-    "memory": "2048",
-    "registeredAt": "2026-08-03T04:20:00.061Z",
-    "registeredBy": "arn:aws:iam::835756672944:root",
-    "enableFaultInjection": false,
-    "tags": []
+        "secretOptions": []
+      },
+      "systemControls": []
+    }
+  ]
 }
