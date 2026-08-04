@@ -6,15 +6,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Connect using the environment variables injected by ECS
 const pool = new Pool({
   user: process.env.DB_USER,
-  host: '127.0.0.1', // Updated for ECS Fargate awsvpc networking
+  host: '127.0.0.1', // Connects to the Postgres container in the same task
   database: process.env.DB_NAME,
   password: process.env.DB_PASSWORD,
   port: 5432,
 });
 
-// Added a catch block so the app doesn't crash if the DB is still booting
+// Create table on startup, with a catch block in case DB is still booting
 pool.query(`
   CREATE TABLE IF NOT EXISTS staff (
     id SERIAL PRIMARY KEY, 
