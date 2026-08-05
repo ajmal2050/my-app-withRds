@@ -9,7 +9,7 @@
     "memory": "2048",
     "containerDefinitions": [
         {
-            "name": "Main",
+            "name": "frontend",
             "image": "<FRONTEND_IMAGE>",
             "cpu": 0,
             "portMappings": [
