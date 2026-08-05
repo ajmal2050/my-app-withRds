@@ -10,7 +10,7 @@ pipeline {
         ECR_REPO           = credentials('aws-ecr-repo-name')
         ECR_REPO_BACKEND   = credentials('aws-ecr-repo-name-backend')
         
-        // ECS Fargate Variables - UPDATED TO MATCH YOUR AWS CONSOLE
+        // ECS Fargate Variables
         ECS_CLUSTER          = 'frontend-cluster'
         ECS_SERVICE_BACKEND  = 'staff-app-backend-service-0edv7m6t'
         // IMPORTANT: Replace the "..." below with the full name from your AWS console
@@ -63,24 +63,28 @@ pipeline {
                     secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
                 ]]) {
                     sh '''
-                        # 1. Inject the new Image URLs into your ECS Task Definition Template
+                        # 1. Inject the new Image URLs into BOTH Task Definition Templates
+                        # Make sure these filenames match the ones in your GitHub repo!
+                        
                         sed -e "s|<FRONTEND_IMAGE>|$ECR_REGISTRY/${ECR_REPO}:frontend-${IMAGE_TAG}|g" \
-                            -e "s|<BACKEND_IMAGE>|$ECR_REGISTRY/${ECR_REPO_BACKEND}:backend-${IMAGE_TAG}|g" \
-                            ecs-task-def-template.json > ecs-task-def.json
+                            frontend-task-def-template.json > frontend-task-def.json
                             
-                        # 2. Register the new Task Definition in AWS (Added --region)
-                        REVISION=$(aws ecs register-task-definition --region $AWS_REGION --cli-input-json file://ecs-task-def.json --query 'taskDefinition.taskDefinitionArn' --output text)
+                        sed -e "s|<BACKEND_IMAGE>|$ECR_REGISTRY/${ECR_REPO_BACKEND}:backend-${IMAGE_TAG}|g" \
+                            backend-task-def-template.json > backend-task-def.json
+                            
+                        # 2. Register BOTH Task Definitions in AWS
+                        FRONTEND_REVISION=$(aws ecs register-task-definition --region $AWS_REGION --cli-input-json file://frontend-task-def.json --query 'taskDefinition.taskDefinitionArn' --output text)
+                        BACKEND_REVISION=$(aws ecs register-task-definition --region $AWS_REGION --cli-input-json file://backend-task-def.json --query 'taskDefinition.taskDefinitionArn' --output text)
                         
-                        echo "Registered new ECS Task Definition: $REVISION"
+                        echo "Registered Frontend Task Definition: $FRONTEND_REVISION"
+                        echo "Registered Backend Task Definition: $BACKEND_REVISION"
                         
-                        # 3. Update BOTH ECS Services (Added --region to both commands)
-
-                         echo "Updating Frontend Service..."
-                        aws ecs update-service --region $AWS_REGION --cluster $ECS_CLUSTER --service $ECS_SERVICE_FRONTEND --task-definition $REVISION --force-new-deployment
+                        # 3. Update BOTH ECS Services with their specific revisions
+                        echo "Updating Frontend Service..."
+                        aws ecs update-service --region $AWS_REGION --cluster $ECS_CLUSTER --service $ECS_SERVICE_FRONTEND --task-definition $FRONTEND_REVISION --force-new-deployment
+                        
                         echo "Updating Backend Service..."
-                        aws ecs update-service --region $AWS_REGION --cluster $ECS_CLUSTER --service $ECS_SERVICE_BACKEND --task-definition $REVISION --force-new-deployment
-                        
-                       
+                        aws ecs update-service --region $AWS_REGION --cluster $ECS_CLUSTER --service $ECS_SERVICE_BACKEND --task-definition $BACKEND_REVISION --force-new-deployment
                     '''
                 }
             }
