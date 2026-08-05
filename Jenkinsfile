@@ -6,13 +6,15 @@ pipeline {
         AWS_REGION         = credentials('aws-region-secret')
         ECR_REGISTRY       = credentials('aws-ecr-registry-url')
         
-        // Repositories (Reverted frontend to ECR_REPO as requested)
+        // Repositories
         ECR_REPO           = credentials('aws-ecr-repo-name')
         ECR_REPO_BACKEND   = credentials('aws-ecr-repo-name-backend')
         
-        // ECS Fargate Variables
-        ECS_CLUSTER        = 'staff-app-cluster'
-        ECS_SERVICE        = 'staff-app-service'
+        // ECS Fargate Variables - UPDATED TO MATCH YOUR AWS CONSOLE
+        ECS_CLUSTER          = 'frontend-cluster'
+        ECS_SERVICE_BACKEND  = 'staff-app-backend-service-0edv7m6t'
+        // IMPORTANT: Replace the "..." below with the full name from your AWS console
+        ECS_SERVICE_FRONTEND = 'staff-app-task-definition-service-b83m...' 
         
         // Dynamic build tag
         IMAGE_TAG          = "${env.BUILD_NUMBER}"
@@ -66,13 +68,19 @@ pipeline {
                             -e "s|<BACKEND_IMAGE>|$ECR_REGISTRY/${ECR_REPO_BACKEND}:backend-${IMAGE_TAG}|g" \
                             ecs-task-def-template.json > ecs-task-def.json
                             
-                        # 2. Register the new Task Definition in AWS
-                        REVISION=$(aws ecs register-task-definition --cli-input-json file://ecs-task-def.json --query 'taskDefinition.taskDefinitionArn' --output text)
+                        # 2. Register the new Task Definition in AWS (Added --region)
+                        REVISION=$(aws ecs register-task-definition --region $AWS_REGION --cli-input-json file://ecs-task-def.json --query 'taskDefinition.taskDefinitionArn' --output text)
                         
                         echo "Registered new ECS Task Definition: $REVISION"
                         
-                        # 3. Update the ECS Service (AWS automatically attaches the new containers to your Load Balancer)
-                        aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --task-definition $REVISION --force-new-deployment
+                        # 3. Update BOTH ECS Services (Added --region to both commands)
+
+                         echo "Updating Frontend Service..."
+                        aws ecs update-service --region $AWS_REGION --cluster $ECS_CLUSTER --service $ECS_SERVICE_FRONTEND --task-definition $REVISION --force-new-deployment
+                        echo "Updating Backend Service..."
+                        aws ecs update-service --region $AWS_REGION --cluster $ECS_CLUSTER --service $ECS_SERVICE_BACKEND --task-definition $REVISION --force-new-deployment
+                        
+                       
                     '''
                 }
             }
