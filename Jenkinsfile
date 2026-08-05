@@ -14,7 +14,7 @@ pipeline {
         ECS_CLUSTER          = 'frontend-cluster'
         ECS_SERVICE_BACKEND  = 'staff-app-backend-service-0edv7m6t'
         // IMPORTANT: Replace the "..." below with the full name from your AWS console
-        ECS_SERVICE_FRONTEND = 'staff-app-task-definition-service-b83mlksv' 
+        ECS_SERVICE_FRONTEND = 'staff-app-task-defnition-service-b83mlksv' 
         
         // Dynamic build tag
         IMAGE_TAG          = "${env.BUILD_NUMBER}"
