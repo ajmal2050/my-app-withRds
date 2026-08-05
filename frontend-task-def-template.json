@@ -1,9 +1,16 @@
 {
-    "taskDefinitionArn": "arn:aws:ecs:ap-south-1:835756672944:task-definition/staff-app-task:6",
+    "family": "staff-app-task",
+    "executionRoleArn": "arn:aws:iam::835756672944:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "1024",
+    "memory": "2048",
     "containerDefinitions": [
         {
             "name": "Main",
-            "image": "835756672944.dkr.ecr.ap-south-1.amazonaws.com/staff/staff-app-ssm:frontend-135",
+            "image": "<FRONTEND_IMAGE>",
             "cpu": 0,
             "portMappings": [
                 {
@@ -29,47 +36,6 @@
             "systemControls": []
         }
     ],
-    "family": "staff-app-task",
-    "executionRoleArn": "arn:aws:iam::835756672944:role/ecsTaskExecutionRole",
-    "networkMode": "awsvpc",
-    "revision": 6,
     "volumes": [],
-    "status": "ACTIVE",
-    "requiresAttributes": [
-        {
-            "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
-        },
-        {
-            "name": "ecs.capability.execution-role-awslogs"
-        },
-        {
-            "name": "com.amazonaws.ecs.capability.ecr-auth"
-        },
-        {
-            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
-        },
-        {
-            "name": "ecs.capability.execution-role-ecr-pull"
-        },
-        {
-            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
-        },
-        {
-            "name": "ecs.capability.task-eni"
-        }
-    ],
-    "placementConstraints": [],
-    "compatibilities": [
-        "EC2",
-        "MANAGED_INSTANCES",
-        "FARGATE"
-    ],
-    "requiresCompatibilities": [
-        "FARGATE"
-    ],
-    "cpu": "1024",
-    "memory": "2048",
-    "registeredAt": "2026-08-05T04:03:16.847Z",
-    "registeredBy": "arn:aws:iam::835756672944:user/jenkins-ecr-user",
-    "tags": []
+    "placementConstraints": []
 }
