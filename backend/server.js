@@ -6,20 +6,25 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Connect using the environment variables injected by ECS
+// Connect using the environment variables injected by ECS & Jenkins
 const pool = new Pool({
   user: process.env.DB_USER,
-  host: '127.0.0.1', // Connects to the Postgres container in the same task
+  host: process.env.DB_HOST, // Connects to the AWS RDS Endpoint
   database: process.env.DB_NAME,
   password: process.env.DB_PASSWORD,
-  port: 5432,
+  port: parseInt(process.env.DB_PORT, 10) || 5432,
+  // AWS RDS connections usually require SSL in production. 
+  // If your RDS instance requires SSL, uncomment the lines below:
+  // ssl: {
+  //   rejectUnauthorized: false
+  // }
 });
 
-// Retry logic to handle the ECS "race condition"
+// Retry logic to handle network latency when ECS tasks start up
 const initializeDatabase = async (retries = 5) => {
   while (retries > 0) {
     try {
-      // Attempt to connect and create the table
+      // Attempt connection and verify/create the staff table
       await pool.query(`
         CREATE TABLE IF NOT EXISTS staff (
           id SERIAL PRIMARY KEY, 
@@ -27,24 +32,24 @@ const initializeDatabase = async (retries = 5) => {
           role VARCHAR(100)
         )
       `);
-      console.log("✅ Database connected and staff table verified!");
-      return; // Exit the loop because we successfully connected
+      console.log("✅ AWS RDS database connected and staff table verified!");
+      return; // Exit loop on success
     } catch (err) {
-      console.error(`⏳ Database not ready yet. Retries left: ${retries - 1}`);
+      console.error(`⏳ AWS RDS not ready yet (${err.message}). Retries left: ${retries - 1}`);
       retries -= 1;
       
       if (retries === 0) {
-        console.error("❌ Could not connect to the database after multiple attempts.");
-        process.exit(1); // Kill the container if it completely fails
+        console.error("❌ Could not connect to AWS RDS after multiple attempts.");
+        process.exit(1); // Kill container so ECS can restart/reschedule it
       }
       
-      // Wait for 3 seconds before trying again
-      await new Promise(res => setTimeout(res, 3000));
+      // Wait 5 seconds before retrying
+      await new Promise(res => setTimeout(res, 5000));
     }
   }
 };
 
-// Start the database initialization
+// Start database initialization
 initializeDatabase();
 
 // API Routes
