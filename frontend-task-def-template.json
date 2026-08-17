@@ -1,41 +1,36 @@
 {
-    "family": "staff-app-task",
-    "executionRoleArn": "arn:aws:iam::835756672944:role/ecsTaskExecutionRole",
-    "networkMode": "awsvpc",
-    "requiresCompatibilities": [
-        "FARGATE"
-    ],
-    "cpu": "1024",
-    "memory": "2048",
-    "containerDefinitions": [
+  "family": "myapp-frontend",
+  "taskRoleArn": "arn:aws:iam::835756672944:role/myapp-ecs-task-role",
+  "executionRoleArn": "arn:aws:iam::835756672944:role/myapp-ecs-execution-role",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "runtimePlatform": {
+    "cpuArchitecture": "X86_64",
+    "operatingSystemFamily": "LINUX"
+  },
+  "containerDefinitions": [
+    {
+      "name": "frontend",
+      "image": "<FRONTEND_IMAGE>",
+      "cpu": 0,
+      "essential": true,
+      "portMappings": [
         {
-            "name": "frontend",
-            "image": "<FRONTEND_IMAGE>",
-            "cpu": 0,
-            "portMappings": [
-                {
-                    "containerPort": 80,
-                    "hostPort": 80,
-                    "protocol": "tcp",
-                    "name": "frontend-80-tcp"
-                }
-            ],
-            "essential": true,
-            "environment": [],
-            "mountPoints": [],
-            "volumesFrom": [],
-            "logConfiguration": {
-                "logDriver": "awslogs",
-                "options": {
-                    "awslogs-group": "/aws/ecs/default/frontend-cluster-29a8",
-                    "awslogs-region": "ap-south-1",
-                    "awslogs-stream-prefix": "ecs"
-                },
-                "secretOptions": []
-            },
-            "systemControls": []
+          "containerPort": 80,
+          "hostPort": 80,
+          "protocol": "tcp"
         }
-    ],
-    "volumes": [],
-    "placementConstraints": []
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/myapp/frontend",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "frontend"
+        }
+      }
+    }
+  ]
 }
