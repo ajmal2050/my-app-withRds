@@ -3,7 +3,9 @@
   "taskRoleArn": "arn:aws:iam::835756672944:role/myapp-ecs-task-role",
   "executionRoleArn": "arn:aws:iam::835756672944:role/myapp-ecs-execution-role",
   "networkMode": "awsvpc",
-  "requiresCompatibilities": ["FARGATE"],
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
   "cpu": "256",
   "memory": "512",
   "runtimePlatform": {
@@ -25,30 +27,15 @@
       ],
       "environment": [
         { "name": "AWS_DEFAULT_REGION", "value": "ap-south-1" },
-        { "name": "AWS_REGION", "value": "ap-south-1" }
+        { "name": "AWS_REGION", "value": "ap-south-1" },
+        { "name": "DB_HOST", "value": "<DB_HOST>" },
+        { "name": "DB_PORT", "value": "<DB_PORT>" },
+        { "name": "DB_NAME", "value": "<DB_NAME>" },
+        { "name": "DB_USER", "value": "<DB_USER>" },
+        { "name": "DB_PASSWORD", "value": "<DB_PASSWORD>" }
       ],
-      "secrets": [
-        {
-          "name": "DB_HOST",
-          "valueFrom": "<APP_SECRET_ARN>:DB_HOST::"
-        },
-        {
-          "name": "DB_NAME",
-          "valueFrom": "<APP_SECRET_ARN>:DB_NAME::"
-        },
-        {
-          "name": "DB_PASSWORD",
-          "valueFrom": "<APP_SECRET_ARN>:DB_PASSWORD::"
-        },
-        {
-          "name": "DB_PORT",
-          "valueFrom": "<APP_SECRET_ARN>:DB_PORT::"
-        },
-        {
-          "name": "DB_USER",
-          "valueFrom": "<APP_SECRET_ARN>:DB_USERNAME::"
-        }
-      ],
+      "mountPoints": [],
+      "volumesFrom": [],
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
@@ -56,7 +43,14 @@
           "awslogs-region": "ap-south-1",
           "awslogs-stream-prefix": "backend"
         }
-      }
+      },
+      "systemControls": []
+    }
+  ],
+  "tags": [
+    {
+      "key": "Name",
+      "value": "myapp-backend-task"
     }
   ]
 }
