@@ -13,11 +13,10 @@ const pool = new Pool({
   database: process.env.DB_NAME,
   password: process.env.DB_PASSWORD,
   port: parseInt(process.env.DB_PORT, 10) || 5432,
-  // AWS RDS connections usually require SSL in production. 
-  // If your RDS instance requires SSL, uncomment the lines below:
-  // ssl: {
-  //   rejectUnauthorized: false
-  // }
+  // Required by AWS RDS PostgreSQL to resolve the 'no encryption' error
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 // Retry logic to handle network latency when ECS tasks start up
