@@ -3,7 +3,9 @@
   "taskRoleArn": "arn:aws:iam::835756672944:role/myapp-ecs-task-role",
   "executionRoleArn": "arn:aws:iam::835756672944:role/myapp-ecs-execution-role",
   "networkMode": "awsvpc",
-  "requiresCompatibilities": ["FARGATE"],
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
   "cpu": "256",
   "memory": "512",
   "runtimePlatform": {
@@ -23,6 +25,9 @@
           "protocol": "tcp"
         }
       ],
+      "environment": [],
+      "mountPoints": [],
+      "volumesFrom": [],
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
@@ -30,7 +35,14 @@
           "awslogs-region": "ap-south-1",
           "awslogs-stream-prefix": "frontend"
         }
-      }
+      },
+      "systemControls": []
+    }
+  ],
+  "tags": [
+    {
+      "key": "Name",
+      "value": "myapp-frontend-task"
     }
   ]
 }
